@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fișiere Pentru Printare</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+        background-color: #f7f7f7;
+      }
+
+      #dropzone {
+        width: 400px;
+        height: 200px;
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-size: 18px;
+        color: #333;
+        background-color: #fff;
+      }
+
+      #dropzone.hover {
+        border-color: #555;
+        background-color: #f0f0f0;
+      }
+
+      #message {
+        margin-top: 20px;
+        font-size: 16px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="dropzone">Trage aici fișierele pentru printare</div>
+    <p id="message">
+      Asigură-te că printerul este pornit și fișierul start_print_server.bat de
+      pe desktopul computerului de la balcon rulează
+    </p>
+
+    <script>
+      const dropzone = document.getElementById("dropzone");
+      const message = document.getElementById("message");
+
+      // Prevent default drag behaviors
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (e) => e.preventDefault());
+      });
+
+      // Highlight drop area when item is dragged over it
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, () =>
+          dropzone.classList.add("hover"),
+        );
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, () =>
+          dropzone.classList.remove("hover"),
+        );
+      });
+
+      // Handle dropped files
+      dropzone.addEventListener("drop", (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          uploadFiles(files);
+        }
+      });
+
+      function uploadFiles(files) {
+        const url = "https://print-server.874906347.xyz";
+
+        for (let i = 0; i < files.length; i++) {
+          const formData = new FormData();
+          formData.append("file", files[i]);
+
+          fetch(url, {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => {
+              if (!response.ok) {
+                // If the response is not OK, fetch the error message from the response
+                return response.json().then((data) => {
+                  throw new Error(data.error || "Unknown error occurred");
+                });
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (data.message) {
+                message.textContent = `Fișierul "${files[i].name}" a fost încărcat cu succes.`;
+                message.style.color = "green";
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+
+              // Check for "Failed to fetch" in the error message
+              if (error.message === "Failed to fetch") {
+                message.textContent =
+                  "Eroare: Cel mai probabil nu ai pornit start_print_server.bat de pe desktop-ul computerului de la balcon";
+              } else {
+                message.textContent = `Eroare: ${error.message}`;
+              }
+
+              message.style.color = "red";
+            });
+        }
+      }
+    </script>
+  </body>
+</html>
