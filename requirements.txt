@@ -2,3 +2,4 @@ flask
 pillow
 flask-cors
 pywin32
+python-dotenv

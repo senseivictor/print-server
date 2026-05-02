@@ -4,24 +4,24 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
 import win32print
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
 # Setup upload and temp directories
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+UPLOAD_FOLDER = '_uploads'
 TEMP_FOLDER = os.path.join(UPLOAD_FOLDER, 'temp')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Path to SumatraPDF
-SOFFICE_PATH = r"C:/_tools/LibreOffice/program/soffice.exe"
-SUMATRA_PATH = r"C:/_tools/SumatraPDF-3.6.1-64/SumatraPDF-3.6.1-64.exe"
-
-# print(SUMATRA_PATH)
+SOFFICE_PATH = os.getenv("SOFFICE_PATH")
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+SUMATRA_PATH = os.path.join(CURRENT_DIR, "SumatraPDF-3.6.1-64", "SumatraPDF-3.6.1-64.exe")
 
 
 def check_printer_status(printer_name):

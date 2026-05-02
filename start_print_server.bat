@@ -10,12 +10,12 @@ if %errorlevel% == 0 (
 )
 
 :: Dacă portul este liber, pornește serverul
-cd /d "C:\Users\victo.DESKTOPPAV\Desktop\print_server"
+cd /d "C:\Users\victor.DESKTOPPAV\Desktop\print_server"
 
 :: Activăm mediul virtual și pornim python în mod "pythonw" (fără consolă)
 :: Folosim start /b pentru a nu bloca scriptul bat
 call ".venv\Scripts\activate"
-start /b "" ".venv\Scripts\pythonw.exe" app.py
+start /b "" ".venv\Scripts\pythonw.exe" src/app.py
 
 echo Serverul a fost pornit in background pe portul %PORT%.
 timeout /t 3
