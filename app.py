@@ -18,9 +18,10 @@ os.makedirs(TEMP_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Path to SumatraPDF
+SOFFICE_PATH = r"C:/_tools/LibreOffice/program/soffice.exe"
 SUMATRA_PATH = r"C:/_tools/SumatraPDF-3.6.1-64/SumatraPDF-3.6.1-64.exe"
 
-print(SUMATRA_PATH)
+# print(SUMATRA_PATH)
 
 
 def check_printer_status(printer_name):
@@ -50,7 +51,7 @@ def convert_image_to_pdf(file_path):
 def convert_office_to_pdf(file_path):
     try:
         subprocess.run([
-            "soffice", "--headless", "--convert-to", "pdf:writer_pdf_Export",
+            SOFFICE_PATH, "--headless", "--convert-to", "pdf:writer_pdf_Export",
             file_path, "--outdir", TEMP_FOLDER
         ], check=True)
         base_name = os.path.splitext(os.path.basename(file_path))[0]
@@ -91,6 +92,7 @@ def upload_file():
     file.save(file_path)
 
     printer_name = win32print.GetDefaultPrinter()
+    print(printer_name)
     if not check_printer_status(printer_name):
         return jsonify({"error": "Cel mai probabil printerul este stins"}), 503
 
