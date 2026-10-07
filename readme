@@ -1,0 +1,11 @@
+Local print server with a web interface,
+so anyone can print on the current printer
+from anywhere
+
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+change SOFFICE_PATH in .env if needed
+
+run start_print_server.bat

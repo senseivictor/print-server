@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fișiere Pentru Printare</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+        background-color: #f7f7f7;
+        margin: 0;
+      }
+
+      .password-container {
+        margin-bottom: 15px;
+        width: 400px;
+        display: flex;
+        gap: 8px;
+        box-sizing: border-box;
+      }
+
+      #passwordInput {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      #passwordInput:focus {
+        border-color: #007bff;
+      }
+
+      .btn-save {
+        padding: 12px 18px;
+        font-size: 15px;
+        font-weight: bold;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+      }
+
+      .btn-save:hover {
+        background-color: #0056b3;
+      }
+
+      .btn-save:active {
+        background-color: #004085;
+      }
+
+      #dropzone {
+        width: 400px;
+        height: 200px;
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-size: 18px;
+        color: #333;
+        background-color: #fff;
+        cursor: pointer;
+        box-sizing: border-box;
+        position: relative;
+      }
+
+      #dropzone.hover {
+        border-color: #555;
+        background-color: #f0f0f0;
+      }
+
+      #dropzone.disabled {
+        pointer-events: none;
+        opacity: 0.6;
+      }
+
+      #loadingContainer {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 15px;
+      }
+
+      .spinner {
+        width: 35px;
+        height: 35px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 8px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      #message {
+        margin-top: 15px;
+        font-size: 16px;
+        color: #333;
+        text-align: center;
+        padding: 0 20px;
+        max-width: 400px;
+      }
+
+      #fileInput {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <form class="password-container" onsubmit="return false;">
+      <input 
+        type="text" 
+        id="passwordInput" 
+        name="print_password" 
+        placeholder="Introdu parola pentru printare" 
+        autocomplete="on"
+      />
+      <button type="button" id="savePasswordBtn" class="btn-save">Salvează</button>
+    </form>
+
+    <input type="file" id="fileInput" multiple />
+
+    <div id="dropzone">Apasă sau trage aici fișierele pentru printare</div>
+
+    <div id="loadingContainer">
+      <div class="spinner"></div>
+      <span style="color: #007bff; font-weight: bold;">Se procesează și se printează...</span>
+    </div>
+
+    <p id="message">
+      Asigură-te că printerul este pornit și computerul de la balcon este conectat la Wi-Fi.
+    </p>
+
+    <script>
+      const dropzone = document.getElementById("dropzone");
+      const message = document.getElementById("message");
+      const fileInput = document.getElementById("fileInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const savePasswordBtn = document.getElementById("savePasswordBtn");
+      const loadingContainer = document.getElementById("loadingContainer");
+
+      // Verificăm dacă există deja o parolă salvată în browser la încărcarea paginii
+      const savedPassword = localStorage.getItem("printer_saved_password");
+      if (savedPassword) {
+        passwordInput.value = savedPassword;
+      }
+
+      // Salvare manuală la apăsarea butonului "Salvează"
+      savePasswordBtn.addEventListener("click", () => {
+        const val = passwordInput.value.trim();
+        if (val) {
+          localStorage.setItem("printer_saved_password", val);
+          message.textContent = "Parola a fost salvată în browser!";
+          message.style.color = "green";
+        } else {
+          localStorage.removeItem("printer_saved_password");
+          message.textContent = "Câmpul parolei este gol. Am șters parola salvată.";
+          message.style.color = "orange";
+        }
+      });
+
+      // Declanșează selectorul de fișiere la click/atingere pe dropzone
+      dropzone.addEventListener("click", () => {
+        if (!passwordInput.value.trim()) {
+          message.textContent = "Te rugăm să introduci parola înainte de a alege fișierele!";
+          message.style.color = "red";
+          passwordInput.focus();
+          return;
+        }
+        fileInput.click();
+      });
+
+      // Ascultă selecția de fișiere
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          uploadFiles(e.target.files);
+        }
+      });
+
+      // Evită comportamentul default de drag & drop al browserului
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (e) => e.preventDefault());
+      });
+
+      // Evidențiere vizuală zona dropzone
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, () =>
+          dropzone.classList.add("hover"),
+        );
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, () =>
+          dropzone.classList.remove("hover"),
+        );
+      });
+
+      // Procesare fișiere trase cu mouse-ul
+      dropzone.addEventListener("drop", (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          uploadFiles(files);
+        }
+      });
+
+      async function uploadFiles(files) {
+        const password = passwordInput.value.trim();
+
+        if (!password) {
+          message.textContent = "Te rugăm să introduci parola!";
+          message.style.color = "red";
+          passwordInput.focus();
+          return;
+        }
+
+        // Se salvează automat parola la trimiterea fișierului
+        localStorage.setItem("printer_saved_password", password);
+
+        // Afișăm loading-ul și blocăm temporar zona dropzone
+        loadingContainer.style.display = "flex";
+        dropzone.classList.add("disabled");
+        message.textContent = "";
+
+        const url = window.location.origin;
+
+        for (let i = 0; i < files.length; i++) {
+          const formData = new FormData();
+          formData.append("file", files[i]);
+          formData.append("password", password);
+
+          try {
+            const response = await fetch(url, {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || "A apărut o eroare necunoscută");
+            }
+
+            message.textContent = `Fișierul "${files[i].name}" a fost trimis la printat cu succes!`;
+            message.style.color = "green";
+
+          } catch (error) {
+            console.error("Error:", error);
+
+            if (error.message === "Failed to fetch") {
+              message.textContent = "Eroare: Nu s-a putut face conexiunea cu serverul de printare.";
+            } else {
+              message.textContent = `Eroare: ${error.message}`;
+            }
+
+            message.style.color = "red";
+          }
+        }
+
+        // Ascundem loading-ul și reactivăm zona dropzone
+        loadingContainer.style.display = "none";
+        dropzone.classList.remove("disabled");
+        fileInput.value = "";
+      }
+    </script>
+  </body>
+</html>
